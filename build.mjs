@@ -82,25 +82,25 @@ const page = `<!DOCTYPE html>
 :root{--bg:#0f1117;--bg2:#1a1d27;--bg3:#21253a;--border:#2a2f45;--text:#f1f5f9;--text3:#a3b1c6;--accent:#3B82F6;--err:#f87171}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px}
-form{width:100%;max-width:340px;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:28px 24px;display:flex;flex-direction:column;gap:14px;box-shadow:0 12px 32px rgba(0,0,0,.4)}
-.logo{font-size:15px;font-weight:700;color:var(--accent);letter-spacing:.08em}
-p{font-size:14px;color:var(--text3)}
-input[type=password]{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:10px 12px;color:var(--text);font-size:15px;outline:none}
+form{width:100%;max-width:300px;display:flex;flex-direction:column;gap:10px}
+.row{display:flex;gap:6px}
+input[type=password]{flex:1;min-width:0;background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:9px 12px;color:var(--text);font-size:15px;outline:none;transition:border-color .15s}
 input[type=password]:focus{border-color:var(--accent)}
-label{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text3);cursor:pointer}
-button{background:var(--accent);color:#fff;border:none;border-radius:7px;padding:10px;font-size:15px;font-weight:600;cursor:pointer}
+input[type=password].bad{border-color:var(--err);animation:shake .3s}
+@keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+button{flex-shrink:0;width:40px;background:var(--accent);color:#fff;border:none;border-radius:7px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+button svg{width:16px;height:16px}
 button:disabled{opacity:.6;cursor:wait}
-.err{font-size:13px;color:var(--err);min-height:18px}
+label{display:flex;align-items:center;gap:7px;font-size:13px;color:var(--text3);cursor:pointer;user-select:none}
 </style>
 </head>
 <body>
 <form id="f" autocomplete="on">
-  <div class="logo">DB I'CAR DMS</div>
-  <p>Cette page est protégée. Saisissez le mot de passe.</p>
-  <input type="password" id="pwd" autocomplete="current-password" autofocus required>
-  <label><input type="checkbox" id="remember"> Se souvenir sur cet appareil</label>
-  <button id="btn" type="submit">Ouvrir</button>
-  <div class="err" id="err"></div>
+  <div class="row">
+    <input type="password" id="pwd" autocomplete="current-password" aria-label="Mot de passe" autofocus required>
+    <button id="btn" type="submit" aria-label="Valider"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+  </div>
+  <label><input type="checkbox" id="remember"> Se souvenir de cet appareil</label>
 </form>
 <script>
 (()=>{
@@ -127,8 +127,8 @@ function forget(){try{localStorage.removeItem(STORE);sessionStorage.removeItem(S
 })();
 document.getElementById('f').addEventListener('submit',async e=>{
   e.preventDefault();
-  const btn=document.getElementById('btn'),err=document.getElementById('err');
-  btn.disabled=true;err.textContent='';
+  const btn=document.getElementById('btn'),pwd=document.getElementById('pwd');
+  btn.disabled=true;pwd.classList.remove('bad');
   try{
     const key=await deriveKey(document.getElementById('pwd').value);
     const raw=new Uint8Array(await crypto.subtle.exportKey('raw',key));
@@ -136,8 +136,8 @@ document.getElementById('f').addEventListener('submit',async e=>{
     save(btoa(String.fromCharCode(...raw)),document.getElementById('remember').checked);
     await show(buf);
   }catch(ex){
-    err.textContent='Mot de passe incorrect.';btn.disabled=false;
-    document.getElementById('pwd').select();
+    btn.disabled=false;
+    void pwd.offsetWidth;pwd.classList.add('bad');pwd.select();
   }
 });
 })();
